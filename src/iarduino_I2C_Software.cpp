@@ -27,36 +27,48 @@
 																												//
 //		НАЗНАЧЕНИЕ ВЫВОДОВ:																						//
 bool	SoftTwoWire::setPins(int sda, int scl){																	//	Параметры:				«sda» - номер вывода SDA, «scl» - номер вывода SCL.
-			pinSDA         = sda;																				//	Сохраняем номер вывода «SDA».
-			pinSCL         = scl;																				//	Сохраняем номер вывода «SCL».
-		//	Сохраняем адреса портов и маски выводов:															//
-			 pinMaskSDA    = digitalPinToBitMask(sda);															//	Сохраняем маску вывода «SDA» в регистрах выходных и выходных значений.
-			 pinMaskSCL    = digitalPinToBitMask(scl);															//	Сохраняем маску вывода «SCL» в регистрах выходных и выходных значений.
-			_pinMaskSDA    = ~pinMaskSDA;																		//	Сохраняем маску вывода «SDA» в регистрах выходных и выходных значений под инверсией.
-			_pinMaskSCL    = ~pinMaskSCL;																		//	Сохраняем маску вывода «SCL» в регистрах выходных и выходных значений под инверсией.
-			int portSDA    = digitalPinToPort(sda);																//	Получаем  номер порта на котором находится вывод  «SDA».
-			int portSCL    = digitalPinToPort(scl);																//	Получаем  номер порта на котором находится вывод  «SCL».
-		#if defined(ESP32)																						//
-			portModeSDA    = (uint32_t*)portModeRegister   (portSDA);											//	Сохраняем адрес регистра конфигурирования  вывода «SDA».
-			portModeSCL    = (uint32_t*)portModeRegister   (portSCL);											//	Сохраняем адрес регистра конфигурирования  вывода «SCL».
-			portInputSDA   = (uint32_t*)portInputRegister  (portSDA);											//	Сохраняем адрес регистра входных  значений вывода «SDA».
-			portInputSCL   = (uint32_t*)portInputRegister  (portSCL);											//	Сохраняем адрес регистра входных  значений вывода «SCL».
-			portOutputSDA  = (uint32_t*)portOutputRegister (portSDA);											//	Сохраняем адрес регистра выходных значений вывода «SDA».
-			portOutputSCL  = (uint32_t*)portOutputRegister (portSCL);											//	Сохраняем адрес регистра выходных значений вывода «SCL».
-		#else																									//
-			portModeSDA    = (uint16_t*)portModeRegister   (portSDA);											//	Сохраняем адрес регистра конфигурирования  вывода «SDA».
-			portModeSCL    = (uint16_t*)portModeRegister   (portSCL);											//	Сохраняем адрес регистра конфигурирования  вывода «SCL».
-			portInputSDA   = (uint16_t*)portInputRegister  (portSDA);											//	Сохраняем адрес регистра входных  значений вывода «SDA».
-			portInputSCL   = (uint16_t*)portInputRegister  (portSCL);											//	Сохраняем адрес регистра входных  значений вывода «SCL».
-			portOutputSDA  = (uint16_t*)portOutputRegister (portSDA);											//	Сохраняем адрес регистра выходных значений вывода «SDA».
-			portOutputSCL  = (uint16_t*)portOutputRegister (portSCL);											//	Сохраняем адрес регистра выходных значений вывода «SCL».
-		#endif																									//
-		//	Конфигурируем выводы:																				//
-			*portModeSDA   &= _pinMaskSDA;																		//	Конфигурируем вывод «SDA» как вход, который подтянется внешним резистором до Vcc.
-			*portModeSCL   &= _pinMaskSCL;																		//	Конфигурируем вывод «SCL» как вход, который подтянется внешним резистором до Vcc.
-		//	Устанавливаем на выводах уровень логического 0:														//
-			*portOutputSDA &= _pinMaskSDA;																		//	Устанавливаем SDA=0. Уровень установится при конфигурировании вывода на выход.
-			*portOutputSCL &= _pinMaskSCL;																		//	Устанавливаем SCL=0. Уровень установится при конфигурировании вывода на выход.
+			pinSDA					= sda;																		//	Сохраняем номер вывода «SDA».
+			pinSCL					= scl;																		//	Сохраняем номер вывода «SCL».
+			#if defined(ARDUINO_ARCH_RP2040)																	//
+			//	Переопределяем указатели управления выводами:													//
+				ptrSDA = new mbed::DigitalInOut(digitalPinToPinName(sda));										//
+				ptrSCL = new mbed::DigitalInOut(digitalPinToPinName(scl));										//
+			//	Конфигурируем выводы:																			//
+				ptrSDA->input();																				//	Конфигурируем вывод «SDA» как вход, который подтянется внешним резистором до Vcc.
+				ptrSCL->input();																				//	Конфигурируем вывод «SCL» как вход, который подтянется внешним резистором до Vcc.
+			//	Устанавливаем на выводах уровень логического 0:													//
+				ptrSDA->mode(PullNone);																			//	Устанавливаем SDA=0. Уровень установится при конфигурировании вывода на выход.
+				ptrSCL->mode(PullNone);																			//	Устанавливаем SCL=0. Уровень установится при конфигурировании вывода на выход.
+			#else																								//
+			//	Сохраняем адреса портов и маски выводов:														//
+				 pinMaskSDA			= digitalPinToBitMask(sda);													//	Сохраняем маску вывода «SDA» в регистрах выходных и выходных значений.
+				 pinMaskSCL			= digitalPinToBitMask(scl);													//	Сохраняем маску вывода «SCL» в регистрах выходных и выходных значений.
+				_pinMaskSDA			= ~pinMaskSDA;																//	Сохраняем маску вывода «SDA» в регистрах выходных и выходных значений под инверсией.
+				_pinMaskSCL			= ~pinMaskSCL;																//	Сохраняем маску вывода «SCL» в регистрах выходных и выходных значений под инверсией.
+				int portSDA			= digitalPinToPort(sda);													//	Получаем  номер порта на котором находится вывод  «SDA».
+				int portSCL			= digitalPinToPort(scl);													//	Получаем  номер порта на котором находится вывод  «SCL».
+				#if defined(ESP32)																				//
+					portModeSDA		= (uint32_t*)portModeRegister   (portSDA);									//	Сохраняем адрес регистра конфигурирования  вывода «SDA».
+					portModeSCL		= (uint32_t*)portModeRegister   (portSCL);									//	Сохраняем адрес регистра конфигурирования  вывода «SCL».
+					portInputSDA	= (uint32_t*)portInputRegister  (portSDA);									//	Сохраняем адрес регистра входных  значений вывода «SDA».
+					portInputSCL	= (uint32_t*)portInputRegister  (portSCL);									//	Сохраняем адрес регистра входных  значений вывода «SCL».
+					portOutputSDA	= (uint32_t*)portOutputRegister (portSDA);									//	Сохраняем адрес регистра выходных значений вывода «SDA».
+					portOutputSCL	= (uint32_t*)portOutputRegister (portSCL);									//	Сохраняем адрес регистра выходных значений вывода «SCL».
+				#else																							//
+					portModeSDA		= (uint16_t*)portModeRegister   (portSDA);									//	Сохраняем адрес регистра конфигурирования  вывода «SDA».
+					portModeSCL		= (uint16_t*)portModeRegister   (portSCL);									//	Сохраняем адрес регистра конфигурирования  вывода «SCL».
+					portInputSDA	= (uint16_t*)portInputRegister  (portSDA);									//	Сохраняем адрес регистра входных  значений вывода «SDA».
+					portInputSCL	= (uint16_t*)portInputRegister  (portSCL);									//	Сохраняем адрес регистра входных  значений вывода «SCL».
+					portOutputSDA	= (uint16_t*)portOutputRegister (portSDA);									//	Сохраняем адрес регистра выходных значений вывода «SDA».
+					portOutputSCL	= (uint16_t*)portOutputRegister (portSCL);									//	Сохраняем адрес регистра выходных значений вывода «SCL».
+				#endif																							//
+			//	Конфигурируем выводы:																			//
+				*portModeSDA   &= _pinMaskSDA;																	//	Конфигурируем вывод «SDA» как вход, который подтянется внешним резистором до Vcc.
+				*portModeSCL   &= _pinMaskSCL;																	//	Конфигурируем вывод «SCL» как вход, который подтянется внешним резистором до Vcc.
+			//	Устанавливаем на выводах уровень логического 0:													//
+				*portOutputSDA &= _pinMaskSDA;																	//	Устанавливаем SDA=0. Уровень установится при конфигурировании вывода на выход.
+				*portOutputSCL &= _pinMaskSCL;																	//	Устанавливаем SCL=0. Уровень установится при конфигурировании вывода на выход.
+			#endif																								//
 		//	Возвращаем флаг успешного подключения выводов SDA и SCL:											//
 			flgPinsEnabled = true;																				//	Устанавливаем флаг подключения выводов SDA и SCL.
 			return true;																						//
@@ -101,22 +113,37 @@ void	SoftTwoWire::end(void){																					//	Параметры:				от�
 			flgSlave				= false;																	//	Сбрасываем флаг работы в качестве ведомого.
 			flgBeginTransmission	= false;																	//	Сбрасываем флаг инициализации передачи данных ведомому.
 		//	Конфигурируем выводы:																				//
-			*portModeSCL &= _pinMaskSCL;																		//	Конфигурируем вывод «SCL» как вход, который подтянется внешним резистором до Vcc.
-			*portModeSDA &= _pinMaskSDA;																		//	Конфигурируем вывод «SDA» как вход, который подтянется внешним резистором до Vcc.
+			#if defined(ARDUINO_ARCH_RP2040)																	//
+				ptrSDA->input();																				//	Конфигурируем вывод «SDA» как вход, который подтянется внешним резистором до Vcc.
+				ptrSCL->input();																				//	Конфигурируем вывод «SCL» как вход, который подтянется внешним резистором до Vcc.
+			#else																								//
+				*portModeSCL &= _pinMaskSCL;																	//	Конфигурируем вывод «SCL» как вход, который подтянется внешним резистором до Vcc.
+				*portModeSDA &= _pinMaskSDA;																	//	Конфигурируем вывод «SDA» как вход, который подтянется внешним резистором до Vcc.
+			#endif																								//
 }																												//
 																												//
 //		УСТАНОВКА СКОРОСТИ ПЕРЕДАЧИ ДАННЫХ:																		//
 void	SoftTwoWire::setClock(uint32_t baudrate	){																//	Параметр:				«baudrate» - скорость передачи данных в Гц.
 			valBaudrate				= baudrate;																	//	Скорость передачи данных в Гц.
 		//	Определяем количество тактов микроконстроллера при выполнении функций управления выводами:			//
-			float tactPerHalfPeriod	= F_CPU / valBaudrate / 2.0f;												//	Количество тактов МК на пол периода тактирования шины I2C.
-			float tactPerCallSet	= 17.0f*getTactPegCalc(16) + 13.0f*getTactPegCalc(8);						//	Количество тактов МК на вызов функций установки логического уровня setXXX_X_HalfPeriod() без цикла ожидания полупериода.
-			float tactPerCallGet	= 17;																		//	Количество тактов МК на вызов функций чтения    логического уровня getXXX без цикла ожидания освобождения линии ведомым.
-			float tactPerWaitSet	= 5.0f*getTactPegCalc(16) + 4.0f*getTactPegCalc(8);							//	Количество тактов МК на один проход цикла ожидания полупериода в функции установки логического уровня setXXX_X_HalfPeriod().
-			float tactPerWaitTimeOut= 14.0f*getTactPegCalc(16) + 16.0f*getTactPegCalc(8);						//	Количество тактов МК на один проход цикла проверки порта входных данных, до истечения таймаута.
+			#if defined(ARDUINO_ARCH_RP2040)																	//
+				float freqCPU_Hz		= 133000000.0f;															//	Тактовая частота  МК в Гц.
+				float tactPerHalfPeriod	= freqCPU_Hz / valBaudrate / 2.0f;										//  Количество тактов МК на пол периода тактирования шины I2C.
+				float tactPerCallSet	= 165.0f;																//  Количество тактов МК на вызов функций установки логического уровня setXXX_X_HalfPeriod() без цикла ожидания полупериода.
+				float tactPerCallGet	= 17.0f;																//  Количество тактов МК на вызов функций чтения    логического уровня getXXX без цикла ожидания освобождения линии ведомым.
+				float tactPerWaitSet	= 11.0f;																//  Количество тактов МК на один проход цикла ожидания полупериода в функции установки логического уровня setXXX_X_HalfPeriod().
+				float tactPerWaitTimeOut= 480.0f;																//  Количество тактов МК на один проход цикла проверки порта входных данных, до истечения таймаута.
+			#else																								//
+				float freqCPU_Hz		= F_CPU;																//	Тактовая частота  МК в Гц.
+				float tactPerHalfPeriod	= freqCPU_Hz / valBaudrate / 2.0f;										//	Количество тактов МК на пол периода тактирования шины I2C.
+				float tactPerCallSet	= 17.0f*getTactPerCalc(16) + 13.0f*getTactPerCalc(8);					//	Количество тактов МК на вызов функций установки логического уровня setXXX_X_HalfPeriod() без цикла ожидания полупериода.
+				float tactPerCallGet	= 17;																	//	Количество тактов МК на вызов функций чтения    логического уровня getXXX без цикла ожидания освобождения линии ведомым.
+				float tactPerWaitSet	= 5.0f*getTactPerCalc(16) + 4.0f*getTactPerCalc(8);						//	Количество тактов МК на один проход цикла ожидания полупериода в функции установки логического уровня setXXX_X_HalfPeriod().
+				float tactPerWaitTimeOut= 14.0f*getTactPerCalc(16) + 16.0f*getTactPerCalc(8);					//	Количество тактов МК на один проход цикла проверки порта входных данных, до истечения таймаута.
+			#endif																								//
 		//	Определяем количество проходов циклов ожидания:														//
 			float i = (tactPerHalfPeriod-tactPerCallSet-tactPerCallGet) / tactPerWaitSet; if(i<0){i=0.0f;}		//
-			float j = F_CPU / 1000000L * valTimeout / tactPerWaitTimeOut;										//
+			float j = freqCPU_Hz / 1000000L * valTimeout / tactPerWaitTimeOut;									//
 			sumHalfPeriod			= (uint16_t)i;																//	Количество проходов цикла while с декрементом счётчика в функции setXXX_X_HalfPeriod() до истечения половины периода valBaudrate.
 			sumTimeout				= (uint32_t)j;																//	Количество проходов цикла while с проверкой порта входных данных, до истечения таймаута.
 }																												//
@@ -399,7 +426,7 @@ bool	SoftTwoWire::getByte(uint8_t& data, bool ack){															//	Парам�
 }																												//
 																												//
 //		КОЛИЧЕСТВО ТАКТОВ CPU ДЛЯ ПРОСТЫХ ВЫЧИСЛЕНИЙ:															//
-uint8_t	SoftTwoWire::getTactPegCalc(uint8_t bits){																//	Параметр:				«bits» - разрядность числа с которым производится вычисление: 8 / 16 / 32.
+uint8_t	SoftTwoWire::getTactPerCalc(uint8_t bits){																//	Параметр:				«bits» - разрядность числа с которым производится вычисление: 8 / 16 / 32.
 		//	Отключаем прерывания:																				//
 			noInterrupts();																						//
 		//	Создаём две переменные в стеке:																		//
@@ -413,14 +440,30 @@ uint8_t	SoftTwoWire::getTactPegCalc(uint8_t bits){																//	Парам�
 			i = bits/i; if( i<=0 ){ i=1; } return (uint8_t)i;													//	Возвращаем количество тактов: 1 / 2 / 4.
 }																												//
 																												//
-//		ФУНКЦИИ УПРАВЛЕНИЯ ВЫВОДАМИ:																			//
-bool	SoftTwoWire::getSDA				(void){ return (bool)(*portInputSDA & pinMaskSDA); }					//
-void	SoftTwoWire::setSDA_0           (void){ *portModeSDA |= pinMaskSDA; }									//
-void	SoftTwoWire::setSDA_0_HalfPeriod(void){ *portModeSDA |= pinMaskSDA; cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }
-void	SoftTwoWire::setSDA_1           (void){ *portModeSDA &=_pinMaskSDA; }									//
-void	SoftTwoWire::setSDA_1_HalfPeriod(void){ *portModeSDA &=_pinMaskSDA; cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }
-																												//
-bool	SoftTwoWire::getSCL				(void){ return (bool)(*portInputSCL & pinMaskSCL); }					//
-void	SoftTwoWire::setSCL_0           (void){ *portModeSCL |= pinMaskSCL; }									//
-void	SoftTwoWire::setSCL_0_HalfPeriod(void){ *portModeSCL |= pinMaskSCL; cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }
-void	SoftTwoWire::setSCL_1_HalfPeriod(void){ *portModeSCL &=_pinMaskSCL; cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }
+//		ФУНКЦИИ УПРАВЛЕНИЯ ВЫВОДАМИ:																								//
+																																	//
+#if defined(ARDUINO_ARCH_RP2040)																									//	:         Period          :   На частоте 100кГц период 10 мс.
+bool	SoftTwoWire::getSDA				(void){ return (bool)ptrSDA->read(); }														//	:                         :
+void	SoftTwoWire::setSDA_0           (void){ ptrSDA->output(); }																	//	: HalfPeriod : HalfPeriod :   На частоте 100кГц пол периода 5 мс.
+void	SoftTwoWire::setSDA_0_HalfPeriod(void){ ptrSDA->output(); cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }			//	:            :____________:
+void	SoftTwoWire::setSDA_1           (void){ ptrSDA->input();  }																	//	|____________|            |
+void	SoftTwoWire::setSDA_1_HalfPeriod(void){ ptrSDA->input();  cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }			//
+																																	//	Функции setSDA_0(), setSDA_1(), setSCL_0()
+bool	SoftTwoWire::getSCL				(void){ return (bool)ptrSCL->read(); }														//	устанавливают 0 или 1.
+void	SoftTwoWire::setSCL_0			(void){ ptrSCL->output(); }																	//	              __
+void	SoftTwoWire::setSCL_0_HalfPeriod(void){ ptrSCL->output(); cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }			//	_ _ _ _ _ _ _|  ^выход
+void	SoftTwoWire::setSCL_1_HalfPeriod(void){ ptrSCL->input();  cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }			//	        вызов^
+																																	//
+#else																																//	Функции setSDA_0_HalfPeriod(), setSDA_1_HalfPeriod, setSCL_0_HalfPeriod(), setSCL_1_HalfPeriod
+																																	//	устанавливают 0 или 1 и выполняют задержку до истечения половины периода.
+bool	SoftTwoWire::getSDA				(void){ return (bool)(*portInputSDA & pinMaskSDA); }										//	              ____________
+void	SoftTwoWire::setSDA_0			(void){ *portModeSDA |= pinMaskSDA; }														//	_ _ _ _ _ _ _|            ^выход
+void	SoftTwoWire::setSDA_0_HalfPeriod(void){ *portModeSDA |= pinMaskSDA; cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }	//	        вызов^
+void	SoftTwoWire::setSDA_1			(void){ *portModeSDA &=_pinMaskSDA; }														//
+void	SoftTwoWire::setSDA_1_HalfPeriod(void){ *portModeSDA &=_pinMaskSDA; cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }	//	В функции setClock(частота)
+																																	//	определяются глобальные переменные:
+bool	SoftTwoWire::getSCL				(void){ return (bool)(*portInputSCL & pinMaskSCL); }										//	sumHalfPeriod - устанавливает счётчик cntHalfPeriod, для ожидания половины периода после установки уровня.
+void	SoftTwoWire::setSCL_0			(void){ *portModeSCL |= pinMaskSCL; }														//	sumTimeout    - устанавливает счётчик cntTimeout   , для ожидания появления уровня или наступления Timeout.
+void	SoftTwoWire::setSCL_0_HalfPeriod(void){ *portModeSCL |= pinMaskSCL; cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }	//	
+void	SoftTwoWire::setSCL_1_HalfPeriod(void){ *portModeSCL &=_pinMaskSCL; cntHalfPeriod=sumHalfPeriod; while(cntHalfPeriod--); }	//	
+#endif																																//	

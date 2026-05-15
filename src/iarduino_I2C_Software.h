@@ -1,5 +1,5 @@
 //	Библиотека для работы с программной шиной I2C в качестве мастера.
-//  Версия: 1.0.4
+//  Версия: 1.0.5
 //  Последнюю версию библиотеки Вы можете скачать по ссылке: https://iarduino.ru/file/627.html
 //  Подробное описание функции бибилиотеки доступно по ссылке: https://wiki.iarduino.ru/
 //  Библиотека является собственностью интернет магазина iarduino.ru и может свободно использоваться и распространяться!
@@ -12,9 +12,13 @@
 #define iarduino_I2C_Software_h																							//
 																														//
 #if defined(ARDUINO) && (ARDUINO >= 100)																				//
-#include		<Arduino.h>																								//
+#include <Arduino.h>																									//
 #else																													//
-#include		<WProgram.h>																							//
+#include <WProgram.h>																									//
+#endif																													//
+																														//
+#if defined(ARDUINO_ARCH_RP2040)																						//
+#include "pinDefinitions.h"																								//
 #endif																													//
 																														//
 #define SOFT_I2C_BUFFER_LENGTH	32																						//	Размер буфера программной шины I2C.
@@ -57,7 +61,7 @@ class SoftTwoWire{																										//	Для class SoftTwoWire : public
 					bool		setReStart				(void){ setSDA_1_HalfPeriod(); return getSDA()==1;	}			//	Подготовка состояния ReStart. Возвращает результат: true/false, далее должен следовать Start.
 					bool		setByte					(uint8_t data										);			//	Передача одного байта данных. Возвращает наличие бита подтверждения: true/false, при таймауте устанавливает flgTimeoutTriggered если это разрешает flgTimeoutEnabled.
 					bool		getByte					(uint8_t& data, bool ack=true						);			//	Чтение байта данных в data.   Возвращает результат: true/false,                  при таймауте устанавливает flgTimeoutTriggered если это разрешает flgTimeoutEnabled.
-					uint8_t		getTactPegCalc			(uint8_t bits										);			//	Получение количества тактов.  Возвращает количество тактов CPU для простых вычислений с целыми числами указанной разрядности.
+					uint8_t		getTactPerCalc			(uint8_t bits										);			//	Получение количества тактов.  Возвращает количество тактов CPU для простых вычислений с целыми числами указанной разрядности.
 																														//
 					int			pinSDA;																					//
 					bool		getSDA					(void												);			//	Чтение логического уровня с линии SDA.
@@ -93,7 +97,10 @@ class SoftTwoWire{																										//	Для class SoftTwoWire : public
 					uint32_t	sumTimeout;																				//	Количество циклов while с проверкой порта входных данных и декрементом счётчика cntTimeout, до истечения таймаута.
 		volatile	uint32_t	cntTimeout;																				//	Счётчик оставшихся циклов while в функциях waitSDA() и waitSCL() до наступления таймаута.
 																														//
-	#if defined(ESP32)																									//
+	#if defined(ARDUINO_ARCH_RP2040)																					//
+		mbed::DigitalInOut*		ptrSDA;																					//	Указатель на объект управления выводом pinSDA.
+		mbed::DigitalInOut*		ptrSCL;																					//	Указатель на объект управления выводом pinSCL.
+	#elif defined(ESP32)																								//
 		volatile	uint32_t*	portModeSDA;																			//	Указатель на адрес регистра конфигурирования направления вывода  pinSDA.
 		volatile	uint32_t*	portModeSCL;																			//	Указатель на адрес регистра конфигурирования направления вывода  pinSCL.
 		volatile	uint32_t*	portInputSDA;																			//	Указатель на адрес регистра чтения входных       данных  вывода  pinSDA.
