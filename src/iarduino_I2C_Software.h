@@ -1,5 +1,5 @@
 //	Библиотека для работы с программной шиной I2C в качестве мастера.
-//  Версия: 1.0.5
+//  Версия: 1.0.6
 //  Последнюю версию библиотеки Вы можете скачать по ссылке: https://iarduino.ru/file/627.html
 //  Подробное описание функции бибилиотеки доступно по ссылке: https://wiki.iarduino.ru/
 //  Библиотека является собственностью интернет магазина iarduino.ru и может свободно использоваться и распространяться!
@@ -92,8 +92,8 @@ class SoftTwoWire{																										//	Для class SoftTwoWire : public
 					uint8_t		arrBuffer[SOFT_I2C_BUFFER_LENGTH];														//	Буфер приёма/передачи данных.
 					uint8_t		bufIndex;																				//	Индекс буфера приёма/передачи данных.
 					uint8_t		bufLen;																					//	Количество байт в буфере приёма/передачи данных.
-					uint16_t	sumHalfPeriod;																			//	Количество циклов while с декрементом счётчика в функции setXXX_X_HalfPeriod() до истечения половины периода valBaudrate.
-		volatile	uint16_t	cntHalfPeriod;																			//	Счётчик оставшихся циклов while в функции setXXX_X_HalfPeriod() до истечения половины периода valBaudrate.
+					uint32_t	sumHalfPeriod;																			//	Количество циклов while с декрементом счётчика в функции setXXX_X_HalfPeriod() до истечения половины периода valBaudrate.
+		volatile	uint32_t	cntHalfPeriod;																			//	Счётчик оставшихся циклов while в функции setXXX_X_HalfPeriod() до истечения половины периода valBaudrate.
 					uint32_t	sumTimeout;																				//	Количество циклов while с проверкой порта входных данных и декрементом счётчика cntTimeout, до истечения таймаута.
 		volatile	uint32_t	cntTimeout;																				//	Счётчик оставшихся циклов while в функциях waitSDA() и waitSCL() до наступления таймаута.
 																														//

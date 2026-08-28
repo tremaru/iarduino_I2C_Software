@@ -138,13 +138,13 @@ void	SoftTwoWire::setClock(uint32_t baudrate	){																//	Парамет
 				float tactPerHalfPeriod	= freqCPU_Hz / valBaudrate / 2.0f;										//	Количество тактов МК на пол периода тактирования шины I2C.
 				float tactPerCallSet	= 17.0f*getTactPerCalc(16) + 13.0f*getTactPerCalc(8);					//	Количество тактов МК на вызов функций установки логического уровня setXXX_X_HalfPeriod() без цикла ожидания полупериода.
 				float tactPerCallGet	= 17;																	//	Количество тактов МК на вызов функций чтения    логического уровня getXXX без цикла ожидания освобождения линии ведомым.
-				float tactPerWaitSet	= 5.0f*getTactPerCalc(16) + 4.0f*getTactPerCalc(8);						//	Количество тактов МК на один проход цикла ожидания полупериода в функции установки логического уровня setXXX_X_HalfPeriod().
+				float tactPerWaitSet	= 6.0f*getTactPerCalc(32) + 3.0f*getTactPerCalc(8);						//	Количество тактов МК на один проход цикла ожидания полупериода в функции установки логического уровня setXXX_X_HalfPeriod().
 				float tactPerWaitTimeOut= 14.0f*getTactPerCalc(16) + 16.0f*getTactPerCalc(8);					//	Количество тактов МК на один проход цикла проверки порта входных данных, до истечения таймаута.
 			#endif																								//
 		//	Определяем количество проходов циклов ожидания:														//
 			float i = (tactPerHalfPeriod-tactPerCallSet-tactPerCallGet) / tactPerWaitSet; if(i<0){i=0.0f;}		//
 			float j = freqCPU_Hz / 1000000L * valTimeout / tactPerWaitTimeOut;									//
-			sumHalfPeriod			= (uint16_t)i;																//	Количество проходов цикла while с декрементом счётчика в функции setXXX_X_HalfPeriod() до истечения половины периода valBaudrate.
+			sumHalfPeriod			= (uint32_t)i;																//	Количество проходов цикла while с декрементом счётчика в функции setXXX_X_HalfPeriod() до истечения половины периода valBaudrate.
 			sumTimeout				= (uint32_t)j;																//	Количество проходов цикла while с проверкой порта входных данных, до истечения таймаута.
 }																												//
 																												//
