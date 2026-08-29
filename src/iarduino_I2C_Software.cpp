@@ -237,7 +237,7 @@ uint8_t	SoftTwoWire::requestFrom(uint8_t addr, uint8_t sum, bool stop){									
 				//	Устанавливаем состояние START:																//
 					if( setStart() ){																			//	Возвращает false если прижат SDA или удерживается SCL.
 					//	Передаём байт адреса с битом RW=1 (получение):											//
-						if( setByte( (valAddress<<1)|1 ) ){														//	Возвращает false если получен NACK.
+						if( setByte( (addr<<1)|1 ) ){															//	Возвращает false если получен NACK.
 						//	Получаем байты в буфер приёма/передачи данных:										//
 							while( sum-- ){																		//	Выполняем цикл sum раз.
 								if( bufLen>=SOFT_I2C_BUFFER_LENGTH ){ flgBufferFull=true; sum=0; }else			//	Выходим из цикла если буфер переполнен.

@@ -60,7 +60,7 @@ void loop(){                                                        //
      if( Serial.available()>0 ){                                    //
      //  Готовимся к приёму команды из монитора:                    //
          lenArr=0; lenCom=0; flgCom=0;                              //   Сбрасываем размер массива чисел lenArr, размер строки команды lenCom и флаг поступления команды flgCom
-         memset(valArr,0,255);                                      //   Обнуляем массив чисел valArr.
+         memset(valArr,0,sizeof(valArr));                           //   Обнуляем массив чисел valArr.
          strCom[lenCom]=0;                                          //   Чистим строку команды strCom.
      //  Посимвольно получаем данные в valArr и strCom:             //
          while( Serial.available() ){                               //
@@ -122,7 +122,7 @@ void loop(){                                                        //
      if( millis()%1000<10 || flgCom ){ delay(10);                   //   Если начинается очередная секунда с момента старта скетча, или поступила команда.
          uint8_t tmp;                                               //
          switch(valMode){                                           //
-             case 'f': if( !flgCom   ){ break; }                    //   Команда поиска устройств на шине: find.
+             case 'f': if( !flgCom   ){ break; } /* FALLTHROUGH */  //   Команда поиска устройств на шине: find.
              case 'F': tmp = fncFind(valArr);                       //   Команда поиска устройств на шине: afind.
                        if(tmp){                                          Serial.print(F("Найдено ")); fncPrintHEX(tmp); Serial.print(F(" устройств")); Serial.print(((tmp%10==1)&&(tmp%100!=11))?"o:":(((tmp%10>1)&&(tmp%10<5)&&(tmp%100!=12)&&(tmp%100!=13)&&(tmp%100!=14))?"a:":":")); for(uint8_t i=0; i<tmp; i++){ Serial.print(' '); fncPrintHEX(valArr[i]);} Serial.println(); }
                        else   {                                          Serial.print(F("Устройства не найдены\r\n")); }
@@ -130,22 +130,22 @@ void loop(){                                                        //
              case 'a': if( !flgCom   ){ break; }                    //   Команда указания адреса: 'a' - address.
                                                                          Serial.print(F("Установлен адрес модуля ")); fncPrintHEX(valAddr); Serial.println();
              break;                                                 //
-             case 'g': if( !flgCom   ){ break; }                    //   Команда чтения из регистров: get.
+             case 'g': if( !flgCom   ){ break; } /* FALLTHROUGH */  //   Команда чтения из регистров: get.
              case 'G': tmp = fncRead(valAddr,valReg,valArr,valSum); //   Команда чтения из регистров: aget.
                        if( valSum==1 ){                                  Serial.print(F("Чтение регистра: [модуль ")); fncPrintHEX(valAddr); Serial.print(F(", регистр " )); fncPrintHEX(valReg);                                                                                                                                     Serial.print(F("] =")); if( tmp==0 ){                                  Serial.print(' '); fncPrintHEX(valArr[0]);  Serial.println(); }else{ Serial.print(" отказано в доступе "); fncPrintERR(tmp); } }
                        else           {                                  Serial.print(F("Чтение регистров:[модуль ")); fncPrintHEX(valAddr); Serial.print(F(", регистры ")); fncPrintHEX(valReg); Serial.print('-'); fncPrintHEX(valReg+valSum-1);                                                                                    Serial.print(F("] =")); if( tmp==0 ){ for(uint8_t i=0; i<valSum; i++){ Serial.print(' '); fncPrintHEX(valArr[i]);} Serial.println(); }else{ Serial.print(" отказано в доступе "); fncPrintERR(tmp); } }
              break;                                                 //
-             case 'x': if( !flgCom   ){ break; }                    //   Команда чтения без указания регистра: getnr.
+             case 'x': if( !flgCom   ){ break; } /* FALLTHROUGH */  //   Команда чтения без указания регистра: getnr.
              case 'X': tmp = fncRead(valAddr, valArr, valSum);      //   Команда чтения без указания регистра: agetnr.
                        if( valSum==1 ){                                  Serial.print(F("Чтение байта:    [модуль ")); fncPrintHEX(valAddr); Serial.print(F(", запрошен один байт] = "));                                                                                                                                                                     if( tmp==0 ){                                                     fncPrintHEX(valArr[0]);  Serial.println(); }else{ Serial.print(" отказано в доступе "); fncPrintERR(tmp); } }
                        else           {                                  Serial.print(F("Чтение байтов:   [модуль ")); fncPrintHEX(valAddr); Serial.print(F(", запрошено "            )); fncPrintHEX(valSum);     Serial.print(F(" байт")); if((valSum%10>1)&&(valSum%10<5)&&((valSum%100<12)||(valSum%100>14))){Serial.print('a');} Serial.print(F("] =")); if( tmp==0 ){ for(uint8_t i=0; i<valSum; i++){ Serial.print(' '); fncPrintHEX(valArr[i]);} Serial.println(); }else{ Serial.print(" отказано в доступе "); fncPrintERR(tmp); } }
              break;                                                 //
-             case 'w': if( !flgCom   ){ break; }                    //   Команда записи в регистры: set.
+             case 'w': if( !flgCom   ){ break; } /* FALLTHROUGH */  //   Команда записи в регистры: set.
              case 'W': tmp = fncWrite(valAddr,valReg,valArr,valSum);//   Команда записи в регистры: aset.
                        if( valSum==1 ){                                  Serial.print(F("Запись значения: [модуль ")); fncPrintHEX(valAddr); Serial.print(F(", регистр " )); fncPrintHEX(valReg);                                                                                                                                     Serial.print(F("] = "));                                                                  fncPrintHEX(valArr[0]);  if( tmp==0 ){ Serial.println(" - успешно"); }else{ Serial.print(" - неудачно "); fncPrintERR(tmp); } }
                        else           {                                  Serial.print(F("Запись значений: [модуль ")); fncPrintHEX(valAddr); Serial.print(F(", регистры ")); fncPrintHEX(valReg); Serial.print('-'); fncPrintHEX(valReg+valSum-1);                                                                                    Serial.print(F("] =" ));              for(uint8_t i=0; i<valSum; i++){ Serial.print(' '); fncPrintHEX(valArr[i]);} if( tmp==0 ){ Serial.println(" - успешно"); }else{ Serial.print(" - неудачно "); fncPrintERR(tmp); } }
              break;                                                 //
-             case 'y': if( !flgCom   ){ break; }                    //   Команда записи без указания регистра: setnr.
+             case 'y': if( !flgCom   ){ break; } /* FALLTHROUGH */  //   Команда записи без указания регистра: setnr.
              case 'Y': tmp = fncWrite(valAddr, valArr, valSum);     //   Команда записи без указания регистра: asetnr.
                        if( valSum==1 ){                                  Serial.print(F("Запись значения: [модуль ")); fncPrintHEX(valAddr); Serial.print(F(", записывается один байт] = "));                                                                                                                                                                                                                                   fncPrintHEX(valArr[0]);  if( tmp==0 ){ Serial.println(" - успешно"); }else{ Serial.print(" - неудачно "); fncPrintERR(tmp); } }
                        else           {                                  Serial.print(F("Запись значений: [модуль ")); fncPrintHEX(valAddr); Serial.print(F(", записываются "             )); fncPrintHEX(valSum); Serial.print(F(" байт")); if((valSum%10>1)&&(valSum%10<5)&&((valSum%100<12)||(valSum%100>14))){Serial.print('a');} Serial.print(F("] ="));               for(uint8_t i=0; i<valSum; i++){ Serial.print(' '); fncPrintHEX(valArr[i]);} if( tmp==0 ){ Serial.println(" - успешно"); }else{ Serial.print(" - неудачно "); fncPrintERR(tmp); } }
